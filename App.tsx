@@ -39,7 +39,7 @@ const App: React.FC = () => {
 
       <div className="absolute inset-0 z-[1] pointer-events-none opacity-[0.25] mix-blend-screen">
           <img 
-            src="/Images/pp.png" 
+            src="/images/pp.png" 
             alt="" 
             className="w-full h-full object-cover grayscale contrast-125" 
           />

@@ -34,7 +34,7 @@ export const INITIAL_NODES: GraphNode[] = [
     label: 'Yunus Özkaya',
     type: NodeType.SYSTEM,
     description: 'Systems Engineer. Chaos Navigator. Builder.',
-    img: '/Images/image.png',
+    img: '/images/image.png',
     val: 5
   },
   {
@@ -42,7 +42,7 @@ export const INITIAL_NODES: GraphNode[] = [
     label: 'My Story with COD',
     type: NodeType.THOUGHT,
     description: 'A narrative on identity, failure, and discipline.',
-    img: '/Images/image (1).png',
+    img: '/images/image (1).png',
     url: 'https://medium.com/@nasuhan.yunus.ozkaya/my-story-with-cod-66e370c5fb7a',
     tags: ['identity', 'growth', 'personal'],
     readTime: '6 min read',
@@ -146,7 +146,7 @@ export const INITIAL_NODES: GraphNode[] = [
     label: 'Data Visualization',
     type: NodeType.DATA,
     description: 'Experiments with D3 and Three.js to render invisible logic.',
-    img: '/Images/image (3).png',
+    img: '/images/image (3).png',
     language: 'TypeScript',
     stars: 45,
     val: 2.5
