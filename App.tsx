@@ -6,6 +6,7 @@ import BioWidget from './components/BioWidget';
 import { INITIAL_NODES, INITIAL_LINKS, getTodaysSignal } from './constants';
 import { GraphData, GraphNode } from './types';
 
+
 const App: React.FC = () => {
   const [data] = useState<GraphData>({
     nodes: JSON.parse(JSON.stringify(INITIAL_NODES)), 
@@ -38,7 +39,7 @@ const App: React.FC = () => {
 
       <div className="absolute inset-0 z-[1] pointer-events-none opacity-[0.25] mix-blend-screen">
           <img 
-            src="././Images/pp.png" 
+            src="Images/pp.png" 
             alt="" 
             className="w-full h-full object-cover grayscale contrast-125" 
           />
