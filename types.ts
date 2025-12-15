@@ -1,4 +1,3 @@
-
 export enum NodeType {
   SYSTEM = 'SYSTEM',
   DATA = 'DATA',
@@ -12,22 +11,16 @@ export interface GraphNode {
   label: string;
   type: NodeType;
   description: string;
-  content?: string; // Markdown or long text
+  content?: string;
   url?: string;
   date?: string;
   tags?: string[];
-  img?: string; // URL for texture/photo
-  
-  // Card Metadata
-  language?: string; // For GitHub projects
-  stars?: number;    // For GitHub projects
-  readTime?: string; // For Medium articles
-  
-  // Physics properties
-  r?: number; // radius
-  val?: number; // value/weight
-
-  // D3 Simulation properties explicit definition
+  img?: string;
+  language?: string;
+  stars?: number;
+  readTime?: string;
+  r?: number;
+  val?: number;
   x?: number;
   y?: number;
   vx?: number;

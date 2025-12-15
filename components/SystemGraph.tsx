@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera, Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -6,7 +6,6 @@ import * as d3 from 'd3';
 import { GraphData, GraphNode, NodeType } from '../types';
 import { COLORS } from '../constants';
 
-// Type augmentation for R3F elements
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -43,8 +42,6 @@ declare global {
   }
 }
 
-// --- Safe Material Component ---
-// Replaces useTexture with manual loader to avoid App crashes on 404s
 const SafeNodeMaterial: React.FC<{ 
   url?: string; 
   baseColor: string; 
@@ -61,7 +58,6 @@ const SafeNodeMaterial: React.FC<{
     }
 
     const loader = new THREE.TextureLoader();
-    // Use encodeURI to handle spaces/special chars in filenames
     const safeUrl = encodeURI(url); 
     
     loader.load(
@@ -77,13 +73,8 @@ const SafeNodeMaterial: React.FC<{
         setError(true);
       }
     );
-    
-    return () => {
-        // Cleanup if needed
-    };
   }, [url]);
 
-  // Fallback or Default Material
   if (error || !texture || !url) {
     return (
       <meshStandardMaterial 
@@ -96,7 +87,6 @@ const SafeNodeMaterial: React.FC<{
     );
   }
 
-  // Image Texture Material
   return (
     <meshStandardMaterial 
       map={texture} 
@@ -109,8 +99,6 @@ const SafeNodeMaterial: React.FC<{
     />
   );
 };
-
-// --- Sub-Components ---
 
 const NodeMesh: React.FC<{ 
   node: GraphNode; 
@@ -125,13 +113,11 @@ const NodeMesh: React.FC<{
   const glowRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   
-  // Color logic
   const baseColor = COLORS[node.type];
   const isSignal = node.type === NodeType.SIGNAL;
   const isFailure = node.type === NodeType.FAILURE;
   const isCore = node.id === 'sys-core';
 
-  // Hover Handler
   const handlePointerOver = () => {
     document.body.style.cursor = 'pointer';
     setHovered(true);
@@ -147,7 +133,6 @@ const NodeMesh: React.FC<{
   useFrame((state) => {
     if (!meshRef.current) return;
     
-    // Sync position with D3
     const time = state.clock.getElapsedTime();
     const zDrift = Math.sin(time * 0.5 + (node.index || 0)) * (isCore ? 0 : 5);
     
@@ -158,7 +143,6 @@ const NodeMesh: React.FC<{
     meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
     meshRef.current.position.z = THREE.MathUtils.lerp(meshRef.current.position.z, zDrift, 0.05);
 
-    // Pulse effect
     if ((isSignal || isCore || hovered) && glowRef.current) {
       const scale = (isCore ? 1.1 : 1.2) + Math.sin(time * 2) * (isCore ? 0.05 : 0.2);
       glowRef.current.scale.set(scale, scale, scale);
@@ -184,14 +168,12 @@ const NodeMesh: React.FC<{
       >
         <sphereGeometry args={[isCore ? 2.5 : (node.val || 1) * 0.6, 64, 64]} />
         
-        {/* Unified Safe Material */}
         <SafeNodeMaterial 
             url={node.img} 
             baseColor={baseColor} 
             hovered={hovered} 
         />
         
-        {/* Glow Shell for Special Nodes */}
         {(isSignal || isCore || hovered) && (
           <mesh ref={glowRef}>
             <sphereGeometry args={[isCore ? 2.5 : 1.5, 32, 32]} />
@@ -204,14 +186,13 @@ const NodeMesh: React.FC<{
           </mesh>
         )}
 
-        {/* --- ALWAYS VISIBLE CARD (Updated Size and Content) --- */}
         <Html 
             position={[0, isCore ? 3.5 : 2.5, 0]} 
             center 
             zIndexRange={[100, 0]} 
             style={{ 
                 pointerEvents: 'none',
-                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // Spring-like feel
+                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                 opacity: hovered ? 1 : 0.9,
                 transform: hovered ? 'scale(1.05)' : 'scale(0.9)'
             }}
@@ -222,7 +203,6 @@ const NodeMesh: React.FC<{
               backdrop-blur-md border rounded-lg shadow-2xl transition-all duration-300
               w-64 md:w-80 overflow-hidden
           `}>
-            {/* Header / Label */}
             <div className={`
                 flex items-center justify-between px-4 py-2 w-full
                 ${hovered ? 'bg-white/5 border-b border-white/10' : ''}
@@ -235,11 +215,9 @@ const NodeMesh: React.FC<{
                         {node.label}
                     </span>
                 </div>
-                {/* Status dot */}
                 <div className={`w-2 h-2 rounded-full ${hovered ? 'animate-pulse' : ''}`} style={{ backgroundColor: baseColor }}></div>
             </div>
 
-            {/* Description Body - Always visible now, but expanded styling on hover */}
             <div className={`
                 w-full px-4 py-3 bg-black/20
                 transition-all duration-300
@@ -248,7 +226,6 @@ const NodeMesh: React.FC<{
                    {node.description}
                </p>
                
-               {/* Metadata Footer (Only on Hover) */}
                <div className={`
                    mt-3 pt-2 border-t border-white/10 flex justify-between items-center
                    transition-all duration-300
@@ -265,7 +242,6 @@ const NodeMesh: React.FC<{
   );
 };
 
-// Physics Engine
 const ForceLayout = ({ 
   data, 
   onSelect,
@@ -275,11 +251,9 @@ const ForceLayout = ({
   onSelect: (node: GraphNode) => void;
   onHoverChange: (isHovering: boolean) => void;
 }) => {
-  // Use any to bypass d3 type errors for Simulation
   const simulation = useRef<any>(null);
 
   useEffect(() => {
-    // Cast d3 to any because the environment types seem to be missing exports
     const d3Any = d3 as any;
 
     simulation.current = d3Any.forceSimulation(data.nodes)
@@ -291,7 +265,6 @@ const ForceLayout = ({
       simulation.current.force('cluster', (alpha: number) => {
         data.nodes.forEach(node => {
             if (node.id === 'sys-core') {
-                 // Keep core at center tightly
                  if (node.vx) node.vx *= 0.1;
                  if (node.vy) node.vy *= 0.1;
                  node.x = node.x ? node.x * 0.9 : 0;
@@ -330,7 +303,6 @@ const ForceLayout = ({
 
   return (
     <>
-      {/* Removed FlowingLines component to remove "lanes" */}
       {data.nodes.map((node) => (
         <NodeMesh 
             key={node.id} 
@@ -343,7 +315,6 @@ const ForceLayout = ({
   );
 };
 
-// Main Scene Component
 const SystemGraph = ({ 
   data, 
   onNodeSelect 
@@ -353,7 +324,6 @@ const SystemGraph = ({
 }) => {
   const controlsRef = useRef<any>(null);
 
-  // Stop rotation when hovering a node
   const handleHoverChange = (isHovering: boolean) => {
     if (controlsRef.current) {
         controlsRef.current.autoRotate = !isHovering;
@@ -365,7 +335,6 @@ const SystemGraph = ({
       <Canvas dpr={[1, 2]}>
         <PerspectiveCamera makeDefault position={[0, 0, 90]} fov={60} />
         
-        {/* Environment */}
         <color attach="background" args={['#0f172a']} />
         <fog attach="fog" args={['#0f172a', 50, 150]} />
         <ambientLight intensity={0.5} />
@@ -373,7 +342,6 @@ const SystemGraph = ({
         <pointLight position={[-10, -10, -10]} intensity={0.5} color="#f87171" />
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
-        {/* Content */}
         <ForceLayout 
             data={data} 
             onSelect={onNodeSelect} 
@@ -392,7 +360,6 @@ const SystemGraph = ({
         />
       </Canvas>
       
-      {/* HUD / Overlay Hints */}
       <div className="absolute bottom-8 right-8 pointer-events-none text-slate-500 font-mono text-[10px] z-10 text-right">
         <p>SYSTEM STATUS: ONLINE</p>
         <p>ENTROPY: STABLE</p>

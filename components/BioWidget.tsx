@@ -25,7 +25,6 @@ const BioWidget: React.FC = () => {
   return (
     <div className="flex flex-col w-full md:w-[380px] font-mono select-none pointer-events-auto mt-2 md:mt-4 max-h-[40vh] md:max-h-[60vh] transition-all">
       
-      {/* Top Bar (LCARS style aesthetic) */}
       <div className="flex items-end h-6 mb-1">
         <div className="bg-sky-600/80 w-16 h-full rounded-tr-lg mr-1 flex items-center justify-center text-slate-900 font-bold text-[10px]">
           BIO-DAT
@@ -34,10 +33,8 @@ const BioWidget: React.FC = () => {
         <div className="bg-sky-600/20 h-1.5 w-8"></div>
       </div>
 
-      {/* Main Content Container */}
       <div className="flex bg-slate-950/80 backdrop-blur-md border-l-4 border-sky-600/80 rounded-bl-xl shadow-2xl overflow-hidden flex-col h-full">
         
-        {/* Static Header (Image Removed) */}
         <div className="p-3 md:p-4 bg-slate-900/50 border-b border-slate-800 flex flex-col justify-center">
              <h2 className="text-lg md:text-xl text-white font-thin uppercase tracking-[0.15em] leading-none mb-1.5">
                 Nasuhan Yunus Özkaya
@@ -48,10 +45,8 @@ const BioWidget: React.FC = () => {
              </div>
         </div>
 
-        {/* Scrollable Data Stream */}
         <div className="overflow-y-auto p-3 md:p-4 custom-scrollbar space-y-4 scroll-smooth" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 #0f172a' }}>
             
-            {/* IDENTITY */}
             <div>
                 <SectionHeader icon={User} title="Core Identity" />
                 <div className="grid grid-cols-2 gap-2">
@@ -60,7 +55,6 @@ const BioWidget: React.FC = () => {
                 </div>
             </div>
 
-            {/* EDUCATION */}
             <div>
                 <SectionHeader icon={GraduationCap} title="Education Module" />
                 <div className="mb-2">
@@ -73,7 +67,6 @@ const BioWidget: React.FC = () => {
                 </div>
             </div>
 
-            {/* INTERNSHIP */}
             <div>
                 <SectionHeader icon={Briefcase} title="Experience Log" />
                 <div className="mb-2">
@@ -88,7 +81,6 @@ const BioWidget: React.FC = () => {
                 </ul>
             </div>
 
-            {/* SKILLS */}
             <div>
                 <SectionHeader icon={Terminal} title="Technical Matrix" />
                 
@@ -108,7 +100,6 @@ const BioWidget: React.FC = () => {
                 </div>
             </div>
 
-            {/* CONCEPTUAL */}
             <div>
                  <SectionHeader icon={BrainCircuit} title="Conceptual Drivers" />
                  <p className="text-[10px] text-slate-400 italic border-l-2 border-amber-500 pl-2 py-1">
@@ -122,7 +113,6 @@ const BioWidget: React.FC = () => {
 
         </div>
 
-        {/* Decorative Footer */}
         <div className="h-4 bg-slate-900 border-t border-sky-600/30 flex items-center px-2 justify-between shrink-0">
              <div className="flex gap-1">
                 <div className="w-1 h-1 bg-sky-500/50"></div>

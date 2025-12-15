@@ -14,7 +14,6 @@ const SignalWidget: React.FC<SignalWidgetProps> = ({ signal }) => {
   return (
     <div className="flex flex-col w-[300px] md:w-[380px] font-mono text-xs select-none pointer-events-auto">
       
-      {/* Top Bar (LCARS style) */}
       <div className="flex items-end h-8 mb-1">
         <div className="bg-amber-500/80 w-24 h-full rounded-tr-xl mr-1 flex items-center justify-center text-slate-900 font-bold tracking-tighter">
           SIG-01
@@ -23,11 +22,9 @@ const SignalWidget: React.FC<SignalWidgetProps> = ({ signal }) => {
         <div className="bg-amber-500/20 h-2 w-12"></div>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex bg-slate-900/50 backdrop-blur-sm border-l-8 border-amber-500/80 rounded-bl-xl pl-4 py-4 pr-4 shadow-lg">
         <div className="flex flex-col gap-2 w-full">
           
-          {/* Header Row */}
           <div className="flex justify-between items-center border-b border-amber-500/30 pb-2 mb-2">
             <div className="flex items-center gap-2 text-amber-400">
               <Radio size={14} className="animate-pulse" />
@@ -36,7 +33,6 @@ const SignalWidget: React.FC<SignalWidgetProps> = ({ signal }) => {
             <span className="text-amber-500/50">{today.toUpperCase()}</span>
           </div>
 
-          {/* Quote */}
           <div className="relative">
              <p className="text-amber-100 text-sm md:text-base leading-relaxed italic">
                "{signal.text}"
@@ -48,7 +44,6 @@ const SignalWidget: React.FC<SignalWidgetProps> = ({ signal }) => {
              </div>
           </div>
 
-          {/* Technical Footer */}
           <div className="flex gap-1 mt-2 pt-2 border-t border-dashed border-amber-500/20 opacity-50">
              <div className="h-1 w-4 bg-amber-500"></div>
              <div className="h-1 w-2 bg-amber-500"></div>

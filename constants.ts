@@ -1,12 +1,11 @@
 import { GraphNode, NodeType, SignalQuote } from './types';
 
-// Visual Constants
 export const COLORS = {
-  [NodeType.SYSTEM]: '#38bdf8', // Sky 400
-  [NodeType.DATA]: '#a78bfa',   // Violet 400
-  [NodeType.THOUGHT]: '#94a3b8', // Slate 400
-  [NodeType.FAILURE]: '#f87171', // Red 400
-  [NodeType.SIGNAL]: '#fbbf24',  // Amber 400
+  [NodeType.SYSTEM]: '#38bdf8',
+  [NodeType.DATA]: '#a78bfa',
+  [NodeType.THOUGHT]: '#94a3b8',
+  [NodeType.FAILURE]: '#f87171',
+  [NodeType.SIGNAL]: '#fbbf24',
 };
 
 export const SIGNAL_QUOTES: SignalQuote[] = [
@@ -19,7 +18,6 @@ export const SIGNAL_QUOTES: SignalQuote[] = [
   { text: "Knowing others is intelligence; knowing yourself is true wisdom.", author: "Laozi" },
 ];
 
-// Helper to get today's signal deterministically
 export const getTodaysSignal = (): SignalQuote => {
   const dateStr = new Date().toDateString();
   let hash = 0;
@@ -30,27 +28,21 @@ export const getTodaysSignal = (): SignalQuote => {
   return SIGNAL_QUOTES[index];
 };
 
-const signal = getTodaysSignal();
-
-// Initial Data Set
 export const INITIAL_NODES: GraphNode[] = [
-  // --- IDENTITY CORE ---
   {
     id: 'sys-core',
     label: 'Yunus Özkaya',
     type: NodeType.SYSTEM,
     description: 'Systems Engineer. Chaos Navigator. Builder.',
-    img: '/Images/image.png', // Main selfie
+    img: '/Images/image.png',
     val: 5
   },
-
-  // --- THOUGHTS ---
   {
     id: 'thought-cod',
     label: 'My Story with COD',
     type: NodeType.THOUGHT,
     description: 'A narrative on identity, failure, and discipline.',
-    img: '/Images/image (1).png', // Second selfie (Black suit/reflective)
+    img: '/Images/image (1).png',
     url: 'https://medium.com/@nasuhan.yunus.ozkaya/my-story-with-cod-66e370c5fb7a',
     tags: ['identity', 'growth', 'personal'],
     readTime: '6 min read',
@@ -75,8 +67,6 @@ export const INITIAL_NODES: GraphNode[] = [
     readTime: '4 min read',
     val: 1.5
   },
-
-  // --- PROJECTS (USER PROVIDED) ---
   {
     id: 'sys-foodbot',
     label: 'FoodBot',
@@ -131,8 +121,6 @@ export const INITIAL_NODES: GraphNode[] = [
     stars: 5,
     val: 2
   },
-
-  // --- CORE SYSTEMS ---
   {
     id: 'sys-portfolio-v1',
     label: 'Legacy Portfolio',
@@ -158,13 +146,11 @@ export const INITIAL_NODES: GraphNode[] = [
     label: 'Data Visualization',
     type: NodeType.DATA,
     description: 'Experiments with D3 and Three.js to render invisible logic.',
-    img: '/Images/image (3).png', // Graph screenshot
+    img: '/Images/image (3).png',
     language: 'TypeScript',
     stars: 45,
     val: 2.5
   },
-  
-  // --- FAILURES ---
   {
     id: 'fail-early-startup',
     label: 'Failed Startup Attempt',
@@ -181,32 +167,22 @@ export const INITIAL_NODES: GraphNode[] = [
     tags: ['engineering', 'refactoring'],
     val: 1.5
   },
-  
-  // --- CONCEPTS ---
   { id: 'con-entropy', label: 'Entropy', type: NodeType.DATA, description: 'The tendency toward disorder.', val: 1 },
   { id: 'con-order', label: 'Order', type: NodeType.SYSTEM, description: 'Emergent structure from chaos.', val: 1 },
   { id: 'con-resilience', label: 'Resilience', type: NodeType.THOUGHT, description: 'Bouncing back from system shock.', val: 1 },
 ];
 
-// Generate Links based on implicit relationships
 export const INITIAL_LINKS = [
-  // Connect everything to core (Star structure)
   { source: 'sys-github', target: 'sys-core', value: 3 },
   { source: 'thought-cod', target: 'sys-core', value: 2 },
   { source: 'sys-visualization', target: 'sys-core', value: 2 },
-
-  // Thoughts -> Concepts/Failures
   { source: 'thought-cod', target: 'fail-early-startup', value: 1 },
   { source: 'thought-cod', target: 'con-resilience', value: 2 },
-  
-  // New Projects -> GitHub/Category
   { source: 'sys-foodbot', target: 'sys-github', value: 1 },
   { source: 'sys-kitchen', target: 'sys-github', value: 1 },
   { source: 'sys-ishare', target: 'sys-github', value: 1 },
   { source: 'sys-planets-ar', target: 'sys-visualization', value: 2 },
   { source: 'sys-streamlit', target: 'sys-visualization', value: 1 },
-
-  // Cross links
   { source: 'sys-kitchen', target: 'thought-react', value: 2 },
   { source: 'sys-portfolio-v1', target: 'sys-github', value: 1 },
   { source: 'sys-visualization', target: 'sys-github', value: 2 },

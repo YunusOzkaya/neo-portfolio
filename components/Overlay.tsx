@@ -17,7 +17,6 @@ const IconMap = {
   [NodeType.SIGNAL]: Activity,
 };
 
-// Sub-component for GitHub Project Card
 const ProjectCard = ({ node }: { node: GraphNode }) => (
   <div className="mt-6 mb-8 bg-slate-950 border border-slate-800 rounded-lg p-5 relative overflow-hidden group shadow-lg">
     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-500 to-blue-600"></div>
@@ -65,7 +64,6 @@ const ProjectCard = ({ node }: { node: GraphNode }) => (
   </div>
 );
 
-// Sub-component for Medium Article Card
 const ArticleCard = ({ node }: { node: GraphNode }) => (
   <div className="mt-6 mb-8 bg-slate-100/5 border border-slate-700 rounded-lg p-5 relative shadow-lg">
     <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-slate-700/20 to-transparent rounded-tr-lg"></div>
@@ -112,16 +110,14 @@ const Overlay: React.FC<OverlayProps> = ({ selectedNode, onClose }) => {
           initial={{ opacity: 0, x: 100 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 100 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} // Custom easing
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="fixed top-0 right-0 h-full w-full md:w-[500px] bg-slate-950/90 backdrop-blur-xl border-l border-slate-800 shadow-2xl z-50 flex flex-col pointer-events-auto"
         >
-          {/* Technical Header Line */}
           <div className="h-1 w-full bg-slate-800">
              <div className="h-full bg-slate-600" style={{ width: '40%', backgroundColor: color }}></div>
           </div>
 
           <div className="p-8 flex flex-col h-full overflow-hidden">
-            {/* Nav Header */}
             <div className="flex justify-between items-start mb-6 shrink-0">
                <div className="flex flex-col">
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 mb-1">
@@ -140,10 +136,7 @@ const Overlay: React.FC<OverlayProps> = ({ selectedNode, onClose }) => {
                </button>
             </div>
 
-            {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto no-scrollbar relative">
-              
-              {/* Specialized Cards or Default Header */}
               {isProject ? (
                 <ProjectCard node={selectedNode} />
               ) : isThought ? (
@@ -162,7 +155,6 @@ const Overlay: React.FC<OverlayProps> = ({ selectedNode, onClose }) => {
                  </div>
               )}
 
-              {/* General Description for Non-Specialized Nodes */}
               {!isProject && !isThought && (
                  <div className="prose prose-invert prose-sm mb-8">
                     <p className="text-slate-300 text-lg leading-relaxed">
@@ -171,7 +163,6 @@ const Overlay: React.FC<OverlayProps> = ({ selectedNode, onClose }) => {
                  </div>
               )}
 
-              {/* Detailed Content / Metadata */}
               {selectedNode.content && (
                 <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-800/50 mb-8">
                   <h4 className="text-[10px] font-mono uppercase text-slate-500 mb-3 tracking-wider">
@@ -183,7 +174,6 @@ const Overlay: React.FC<OverlayProps> = ({ selectedNode, onClose }) => {
                 </div>
               )}
 
-              {/* Tags */}
               {selectedNode.tags && (
                 <div className="mb-8">
                    <h4 className="text-[10px] font-mono uppercase text-slate-500 mb-3 tracking-wider">
@@ -200,7 +190,6 @@ const Overlay: React.FC<OverlayProps> = ({ selectedNode, onClose }) => {
               )}
             </div>
 
-            {/* Footer Action */}
             {selectedNode.url && (
               <div className="mt-6 pt-6 border-t border-slate-800 shrink-0">
                 <a 
