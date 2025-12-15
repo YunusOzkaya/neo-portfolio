@@ -37,7 +37,7 @@ const App: React.FC = () => {
         <SystemGraph data={data} onNodeSelect={handleNodeSelect} />
       </div>
 
-      <div className="absolute inset-0 z-[1] pointer-events-none opacity-[0.03] mix-blend-screen">
+      <div className="absolute inset-0 z-[1] pointer-events-none opacity-[0.3] mix-blend-screen">
           <img 
             src="/images/pp.png" 
             alt="" 
