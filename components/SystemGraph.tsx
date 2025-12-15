@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, PerspectiveCamera, Html } from '@react-three/drei';
+import { OrbitControls, Stars, PerspectiveCamera, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import * as d3 from 'd3';
 import { GraphData, GraphNode, NodeType } from '../types';
@@ -14,6 +14,7 @@ declare global {
       sphereGeometry: any;
       meshStandardMaterial: any;
       meshBasicMaterial: any;
+      ringGeometry: any;
       lineSegments: any;
       lineBasicMaterial: any;
       color: any;
@@ -22,82 +23,22 @@ declare global {
       pointLight: any;
     }
   }
-
-  namespace React {
-    namespace JSX {
-      interface IntrinsicElements {
-        group: any;
-        mesh: any;
-        sphereGeometry: any;
-        meshStandardMaterial: any;
-        meshBasicMaterial: any;
-        lineSegments: any;
-        lineBasicMaterial: any;
-        color: any;
-        fog: any;
-        ambientLight: any;
-        pointLight: any;
-      }
-    }
-  }
 }
 
-const SafeNodeMaterial: React.FC<{ 
-  url?: string; 
-  baseColor: string; 
-  hovered: boolean;
-}> = ({ url, baseColor, hovered }) => {
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (!url) {
-      setTexture(null);
-      setError(false);
-      return;
-    }
-
-    const loader = new THREE.TextureLoader();
-    const safeUrl = encodeURI(url); 
-    
-    loader.load(
-      safeUrl,
-      (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        setTexture(tex);
-        setError(false);
-      },
-      undefined,
-      (err) => {
-        console.warn(`Failed to load texture: ${url}`, err);
-        setError(true);
-      }
-    );
-  }, [url]);
-
-  if (error || !texture || !url) {
+const PlanetRing = ({ color, size }: { color: string, size: number }) => {
     return (
-      <meshStandardMaterial 
-        color={baseColor} 
-        emissive={baseColor}
-        emissiveIntensity={hovered ? 0.8 : 0.2}
-        roughness={0.4}
-        metalness={0.6}
-      />
+        <mesh rotation={[-Math.PI / 2.2, 0, 0]}>
+            <ringGeometry args={[size * 1.4, size * 2, 64]} />
+            <meshStandardMaterial 
+                color={color} 
+                opacity={0.3} 
+                transparent 
+                side={THREE.DoubleSide}
+                emissive={color}
+                emissiveIntensity={0.2}
+            />
+        </mesh>
     );
-  }
-
-  return (
-    <meshStandardMaterial 
-      map={texture} 
-      emissiveMap={texture}
-      emissive="white"
-      emissiveIntensity={0.4}
-      color={"white"}
-      roughness={0.2}
-      metalness={0.1}
-    />
-  );
 };
 
 const NodeMesh: React.FC<{ 
@@ -116,7 +57,12 @@ const NodeMesh: React.FC<{
   const baseColor = COLORS[node.type];
   const isSignal = node.type === NodeType.SIGNAL;
   const isFailure = node.type === NodeType.FAILURE;
+  const isSystem = node.type === NodeType.SYSTEM;
   const isCore = node.id === 'sys-core';
+
+  // Random rotation axis for each planet
+  const rotationAxis = useMemo(() => new THREE.Vector3(Math.random(), Math.random(), Math.random()).normalize(), []);
+  const rotationSpeed = useMemo(() => (Math.random() * 0.5 + 0.2) * (isCore ? 0.5 : 1), [isCore]);
 
   const handlePointerOver = () => {
     document.body.style.cursor = 'pointer';
@@ -130,114 +76,113 @@ const NodeMesh: React.FC<{
     onHoverChange(false);
   };
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!meshRef.current) return;
     
-    const time = state.clock.getElapsedTime();
-    const zDrift = Math.sin(time * 0.5 + (node.index || 0)) * (isCore ? 0 : 5);
-    
-    const targetX = (node.x || 0) * 0.1;
-    const targetY = -(node.y || 0) * 0.1;
+    // Physics Position interpolation
+    const targetX = (node.x || 0) * 0.12; // Spread multiplier
+    const targetY = -(node.y || 0) * 0.12;
     
     meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
     meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
-    meshRef.current.position.z = THREE.MathUtils.lerp(meshRef.current.position.z, zDrift, 0.05);
+    
+    // Planet Rotation
+    meshRef.current.rotateOnAxis(rotationAxis, delta * rotationSpeed);
 
+    // Glow pulsing
     if ((isSignal || isCore || hovered) && glowRef.current) {
-      const scale = (isCore ? 1.1 : 1.2) + Math.sin(time * 2) * (isCore ? 0.05 : 0.2);
+      const time = state.clock.getElapsedTime();
+      const scale = (isCore ? 1.1 : 1.2) + Math.sin(time * 2) * (isCore ? 0.05 : 0.1);
       glowRef.current.scale.set(scale, scale, scale);
-      if (isCore) {
-        glowRef.current.rotation.y += 0.005;
-        glowRef.current.rotation.z += 0.002;
-      }
+      glowRef.current.lookAt(state.camera.position); // Billboard the glow
     }
 
     if (isFailure) {
-        meshRef.current.position.x += (Math.random() - 0.5) * 0.05;
-        meshRef.current.position.y += (Math.random() - 0.5) * 0.05;
+        // Slight glitch shake for failure nodes
+        if (Math.random() > 0.95) {
+            meshRef.current.position.x += (Math.random() - 0.5) * 0.1;
+        }
     }
   });
 
+  const size = isCore ? 3.5 : (node.val || 1) * 0.8;
+
   return (
     <group>
-      <mesh
-        ref={meshRef}
+      <group
         onClick={(e) => { e.stopPropagation(); onSelect(node); }}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
-        <sphereGeometry args={[isCore ? 2.5 : (node.val || 1) * 0.6, 64, 64]} />
+        {/* Main Planet Mesh */}
+        <mesh ref={meshRef}>
+            <sphereGeometry args={[size, 64, 64]} />
+            
+            {isSignal ? (
+                 <meshBasicMaterial color={baseColor} />
+            ) : (
+                <meshStandardMaterial 
+                    color={hovered ? '#ffffff' : baseColor}
+                    emissive={baseColor}
+                    emissiveIntensity={isCore ? 0.5 : 0.1}
+                    roughness={isSystem ? 0.2 : 0.8} // Systems are shiny/watery, others rough/rocky
+                    metalness={isSystem ? 0.5 : 0.1}
+                    flatShading={isFailure} // Failure nodes look low-poly/broken
+                />
+            )}
+
+            {/* Planet Rings for Systems */}
+            {isSystem && !isCore && <PlanetRing color={baseColor} size={size} />}
+        </mesh>
         
-        <SafeNodeMaterial 
-            url={node.img} 
-            baseColor={baseColor} 
-            hovered={hovered} 
-        />
-        
+        {/* Atmosphere/Glow */}
         {(isSignal || isCore || hovered) && (
-          <mesh ref={glowRef}>
-            <sphereGeometry args={[isCore ? 2.5 : 1.5, 32, 32]} />
+          <mesh ref={glowRef} position={[meshRef.current?.position.x || 0, meshRef.current?.position.y || 0, 0]}>
+            <sphereGeometry args={[size * 1.2, 32, 32]} />
             <meshBasicMaterial 
               color={isCore ? '#ffffff' : baseColor} 
               transparent 
-              opacity={isCore ? 0.1 : 0.15} 
-              wireframe={!isCore}
+              opacity={isCore ? 0.15 : 0.2} 
+              depthWrite={false}
             />
           </mesh>
         )}
 
-        <Html 
-            position={[0, isCore ? 3.5 : 2.5, 0]} 
-            center 
-            zIndexRange={[100, 0]} 
-            style={{ 
-                pointerEvents: 'none',
-                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                opacity: hovered ? 1 : 0.9,
-                transform: hovered ? 'scale(1.05)' : 'scale(0.9)'
-            }}
-        >
-          <div className={`
-              flex flex-col items-center 
-              ${hovered ? 'bg-slate-900/95 border-amber-500/80 z-50 shadow-amber-500/20' : 'bg-slate-900/50 border-slate-700/40'}
-              backdrop-blur-md border rounded-lg shadow-2xl transition-all duration-300
-              w-64 md:w-80 overflow-hidden
-          `}>
-            <div className={`
-                flex items-center justify-between px-4 py-2 w-full
-                ${hovered ? 'bg-white/5 border-b border-white/10' : ''}
-            `}>
-                <div className="flex flex-col items-start">
-                    <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest opacity-80 mb-0.5">
-                        {node.type} NODE
-                    </span>
-                    <span className="text-sm md:text-base text-white font-bold tracking-wide whitespace-nowrap" style={{ color: hovered ? '#fff' : baseColor }}>
+        {/* HTML Label - Moves with the group, but we anchor it to the mesh position logic in parent if needed, 
+            but here useFrame updates mesh position. 
+            Better to put Html INSIDE the mesh to follow it, but Html implies 0,0,0 of parent.
+            Since mesh moves, we wrap Html in a Group that follows mesh position? 
+            Actually, simpler to let Html follow the group if we moved the group.
+            Current logic moves the mesh inside the group. Let's move the Html manually or bind it.
+        */}
+        <mesh position={[meshRef.current?.position.x || 0, meshRef.current?.position.y || 0, 0]}>
+           {/* Invisible hit box for easier clicking */}
+           <sphereGeometry args={[size * 1.5, 16, 16]} />
+           <meshBasicMaterial visible={false} />
+           
+            <Html 
+                position={[0, size + 1.5, 0]} 
+                center 
+                zIndexRange={[100, 0]} 
+                style={{ 
+                    pointerEvents: 'none',
+                    transition: 'all 0.3s ease',
+                    opacity: hovered ? 1 : 0.6,
+                    transform: hovered ? 'scale(1.1)' : 'scale(1)'
+                }}
+            >
+                <div className={`
+                    px-3 py-1.5 rounded-full border backdrop-blur-md shadow-xl flex items-center gap-2
+                    ${hovered ? 'bg-slate-900/90 border-white/50' : 'bg-slate-900/40 border-slate-700/30'}
+                `}>
+                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: baseColor }}></div>
+                    <span className="text-xs font-bold font-mono tracking-wider text-white whitespace-nowrap">
                         {node.label}
                     </span>
                 </div>
-                <div className={`w-2 h-2 rounded-full ${hovered ? 'animate-pulse' : ''}`} style={{ backgroundColor: baseColor }}></div>
-            </div>
-
-            <div className={`
-                w-full px-4 py-3 bg-black/20
-                transition-all duration-300
-            `}>
-               <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                   {node.description}
-               </p>
-               
-               <div className={`
-                   mt-3 pt-2 border-t border-white/10 flex justify-between items-center
-                   transition-all duration-300
-                   ${hovered ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0 overflow-hidden'}
-               `}>
-                    <span className="text-[9px] font-mono text-slate-500 uppercase">Interactive</span>
-                    <span className="text-[9px] text-amber-500 font-mono animate-pulse">CLICK_TO_ACCESS</span>
-               </div>
-            </div>
-          </div>
-        </Html>
-      </mesh>
+            </Html>
+        </mesh>
+      </group>
     </group>
   );
 };
@@ -256,11 +201,12 @@ const ForceLayout = ({
   useEffect(() => {
     const d3Any = d3 as any;
 
+    // INCREASED DISTANCES FOR BETTER SPACING
     simulation.current = d3Any.forceSimulation(data.nodes)
-      .force('charge', d3Any.forceManyBody().strength(-300))
+      .force('charge', d3Any.forceManyBody().strength(-600)) // Stronger repulsion
       .force('center', d3Any.forceCenter(0, 0))
-      .force('collide', d3Any.forceCollide().radius((node: any) => (node.val || 1) * 15).strength(0.7))
-      .force('link', d3Any.forceLink(data.links).id((d: any) => d.id).distance(100));
+      .force('collide', d3Any.forceCollide().radius((node: any) => (node.val || 1) * 25).strength(0.8)) // Larger collision radius
+      .force('link', d3Any.forceLink(data.links).id((d: any) => d.id).distance(150)); // Longer links
 
       simulation.current.force('cluster', (alpha: number) => {
         data.nodes.forEach(node => {
@@ -273,14 +219,15 @@ const ForceLayout = ({
             }
             if (node.type === NodeType.SIGNAL) return; 
             
+            // Adjusted cluster centers for wider spread
             let targetX = 0; 
             let targetY = 0;
             
             switch (node.type) {
-                case NodeType.FAILURE: targetX = -300; targetY = 200; break;
-                case NodeType.SYSTEM: targetX = 300; targetY = -200; break;
-                case NodeType.DATA: targetX = 300; targetY = 200; break;
-                case NodeType.THOUGHT: targetX = -300; targetY = -200; break;
+                case NodeType.FAILURE: targetX = -400; targetY = 300; break;
+                case NodeType.SYSTEM: targetX = 400; targetY = -300; break;
+                case NodeType.DATA: targetX = 400; targetY = 300; break;
+                case NodeType.THOUGHT: targetX = -400; targetY = -300; break;
             }
             
             if (node.vx !== undefined && node.x !== undefined) {
@@ -333,14 +280,16 @@ const SystemGraph = ({
   return (
     <div className="w-full h-full bg-slate-900 relative">
       <Canvas dpr={[1, 2]}>
-        <PerspectiveCamera makeDefault position={[0, 0, 90]} fov={60} />
+        <PerspectiveCamera makeDefault position={[0, 0, 110]} fov={55} />
         
-        <color attach="background" args={['#0f172a']} />
-        <fog attach="fog" args={['#0f172a', 50, 150]} />
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} color="#38bdf8" />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#f87171" />
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+        <color attach="background" args={['#050810']} /> {/* Darker space black */}
+        <fog attach="fog" args={['#050810', 80, 200]} />
+        
+        <ambientLight intensity={0.2} />
+        <pointLight position={[50, 50, 50]} intensity={1.5} color="#ffd4a3" /> {/* Sun light */}
+        <pointLight position={[-50, -50, -50]} intensity={1} color="#4c6ef5" /> {/* Rim light */}
+        
+        <Stars radius={150} depth={50} count={7000} factor={4} saturation={0} fade speed={0.5} />
 
         <ForceLayout 
             data={data} 
@@ -352,23 +301,21 @@ const SystemGraph = ({
           ref={controlsRef}
           enablePan={false} 
           enableZoom={true} 
-          minDistance={20} 
-          maxDistance={120} 
+          minDistance={30} 
+          maxDistance={180} 
           autoRotate 
-          autoRotateSpeed={0.5} 
+          autoRotateSpeed={0.3} 
           dampingFactor={0.05}
         />
       </Canvas>
       
-      <div className="absolute bottom-8 right-8 pointer-events-none text-slate-500 font-mono text-[10px] z-10 text-right">
-        <p>SYSTEM STATUS: ONLINE</p>
-        <p>ENTROPY: STABLE</p>
-        <p>NODES: {data.nodes.length}</p>
-        <div className="mt-4 flex flex-col gap-1 items-end">
+      <div className="absolute bottom-8 right-8 pointer-events-none text-slate-600 font-mono text-[10px] z-10 text-right opacity-50">
+        <p>ORBITAL SIMULATION: ACTIVE</p>
+        <div className="mt-2 flex flex-col gap-1 items-end">
           {Object.entries(COLORS).map(([type, color]) => (
             <div key={type} className="flex items-center gap-2">
                <span>{type}</span>
-               <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }}></span>
+               <div className="w-2 h-2 rounded-full ring-1 ring-slate-700" style={{ background: color, boxShadow: `0 0 8px ${color}` }}></div>
             </div>
           ))}
         </div>
